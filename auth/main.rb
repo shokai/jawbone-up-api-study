@@ -44,4 +44,5 @@ end
 post '/pubsub' do
   request.body.rewind
   puts request.body.read
+  "ok"
 end
