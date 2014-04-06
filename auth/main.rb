@@ -1,3 +1,7 @@
+def app_root
+  "#{env['rack.url_scheme']}://#{env['HTTP_HOST']}#{env['SCRIPT_NAME']}"
+end
+
 def oauth_client
   @client ||= OAuth2::Client.new(CLIENT_ID, APP_SECRET,
                                  :site => 'https://jawbone.com',
@@ -15,9 +19,9 @@ get '/' do
 end
 
 get '/login' do
-  scope = "extended_read sleep_read mood_read"
+  scope = "basic_read extended_read mood_read move_read sleep_read generic_event_read"
   redirect oauth_client.auth_code.authorize_url(:scope => scope,
-                                                :redirect_uri => "http://localhost:5000/auth")
+                                                :redirect_uri => "#{app_root}/auth")
 end
 
 get '/auth' do
@@ -25,6 +29,7 @@ get '/auth' do
   halt 400, 'code missing' unless code
   begin
     session[:oauth_token] = oauth_client.auth_code.get_token(code).token
+    puts "TOKEN : "+session[:oauth_token]
   rescue => e
     STDERR.puts e.message
   end
@@ -34,4 +39,9 @@ end
 get '/logout' do
   session.delete :oauth_token
   redirect "/"
+end
+
+post '/pubsub' do
+  request.body.rewind
+  puts request.body.read
 end
